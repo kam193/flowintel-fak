@@ -1,0 +1,42 @@
+name: build-containers
+run-name: Building service containers
+on:
+  push:
+
+env:
+  REGISTRY: ghcr.io
+  PUSH_REGISTRY: ghcr.io
+  MANIFEST_REGISTRY: ghcr.io/
+  BASE_TAG: "0.1."
+
+jobs:
+  build-containers:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Authorize to GitHub Packages
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Authorize to Github Docker Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+      - name: Build container
+        if: steps.check-service-changed.outputs.exit-code != 0
+        run: |
+          docker build -t ${PUSH_REGISTRY}/kam193/flowintel-fak:latest .
+      - name: Check if the current version has already been pushed
+        id: check-if-pushed
+        run: |
+          export GHCR_TOKEN=$(echo ${{ secrets.GITHUB_TOKEN }} | base64)
+          export TAG=$BASE_TAG$(cat VERSION)
+          echo manifest=$(curl -s -H "Authorization: Bearer ${GHCR_TOKEN}" https://ghcr.io/v2/kam193/flowintel-fak/manifests/$TAG | grep "manifest unknown") >> $GITHUB_OUTPUT
+      - name: Push container
+        if: steps.check-if-pushed.outputs.manifest
+        run: |
+          docker tag ${PUSH_REGISTRY}/kam193/flowintel-fak:latest ${PUSH_REGISTRY}/kam193/flowintel-fak:$BASE_TAG$(cat VERSION)
+          docker push ${PUSH_REGISTRY}/kam193/flowintel-fak:latest
+          docker push ${PUSH_REGISTRY}/kam193/flowintel-fak:$BASE_TAG$(cat VERSION)
