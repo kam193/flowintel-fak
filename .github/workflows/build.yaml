@@ -25,7 +25,6 @@ jobs:
       - name: Authorize to Github Docker Registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
       - name: Build container
-        if: steps.check-service-changed.outputs.exit-code != 0
         run: |
           docker build -t ${PUSH_REGISTRY}/kam193/flowintel-fak:latest .
       - name: Check if the current version has already been pushed
