@@ -39,12 +39,16 @@ jobs:
 
       - name: Clone flowintel repository
         if: steps.check-base-image.outputs.exists == '0'
-        uses: actions/checkout@v4
-        with:
-          repository: flowintel/flowintel
-          ref: ${{ steps.read-commit.outputs.commit }}
-          path: flowintel
-          token: ''
+        # uses: actions/checkout@v4
+        # with:
+        #   repository: flowintel/flowintel
+        #   ref: ${{ steps.read-commit.outputs.commit }}
+        #   path: flowintel
+        #   token: ''
+        run:
+          git clone https://github.com/flowintel/flowintel.git
+          cd flowintel
+          git reset --hard ${{ steps.read-commit.outputs.commit }}
 
       - name: Build base image
         if: steps.check-base-image.outputs.exists == '0'
