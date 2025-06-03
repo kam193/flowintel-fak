@@ -44,10 +44,6 @@ jobs:
           repository: flowintel/flowintel
           ref: ${{ steps.read-commit.outputs.commit }}
           path: flowintel
-        # run: |
-        #   git clone https://github.com/flowintel/flowintel.git
-        #   cd flowintel
-        #   git reset --hard ${{ steps.read-commit.outputs.commit }}
 
       - name: Build base image
         if: steps.check-base-image.outputs.exists == '0'
@@ -79,7 +75,7 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
       - name: Build container
         run: |
-          docker build --arg BASE_IMAGE=${BASE_IMAGE} -t ${PUSH_REGISTRY}/kam193/flowintel-fak:latest .
+          docker build --build-arg BASE_IMAGE=${BASE_IMAGE} -t ${PUSH_REGISTRY}/kam193/flowintel-fak:latest .
       - name: Check if the current version has already been pushed
         id: check-if-pushed
         run: |
