@@ -1,20 +1,20 @@
-# Copy of https://github.com/flowintel/flowintel/blob/main/Dockerfile but with Python 3.13
+# Copy of https://github.com/flowintel/flowintel/blob/main/Dockerfile but with Python 3.12
 # Use the official Ubuntu Focal (20.04) as a parent image
 FROM ubuntu:focal
 
 # Needed to prevent tzdata to be interactive
 RUN ln -fs /usr/share/zoneinfo/Europe/Luxembourg /etc/localtime
 
-# Add support for Python 3.13 (deadsnakes PPA)
+# Add support for Python 3.12 (deadsnakes PPA)
 RUN apt update && apt install -y \
     sudo moreutils software-properties-common \
     git screen libolm-dev librsvg2-bin wget vim curl gnupg \
     && add-apt-repository ppa:deadsnakes/ppa \
-    && apt update && apt install -y python3.13 python3.13-venv
+    && apt update && apt install -y python3.12 python3.12-venv
 
-# Symlink python3 and pip3 to Python 3.13
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.13 1 && \
-    curl -sS https://bootstrap.pypa.io/get-pip.py | python3.13 && \
+# Symlink python3 and pip3 to Python 3.12
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1 && \
+    curl -sS https://bootstrap.pypa.io/get-pip.py | python3.12 && \
     ln -s /usr/local/bin/pip /usr/bin/pip3
 
 # Pandoc dependencies
