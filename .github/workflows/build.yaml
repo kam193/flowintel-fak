@@ -45,7 +45,7 @@ jobs:
         #   ref: ${{ steps.read-commit.outputs.commit }}
         #   path: flowintel
         #   token: ''
-        run:
+        run: |
           git clone https://github.com/flowintel/flowintel.git
           cd flowintel
           git reset --hard ${{ steps.read-commit.outputs.commit }}
