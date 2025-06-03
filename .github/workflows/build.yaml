@@ -44,6 +44,7 @@ jobs:
           repository: flowintel/flowintel
           ref: ${{ steps.read-commit.outputs.commit }}
           path: flowintel
+          token: ''
 
       - name: Build base image
         if: steps.check-base-image.outputs.exists == '0'
