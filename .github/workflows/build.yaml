@@ -49,7 +49,7 @@ jobs:
         if: steps.check-base-image.outputs.exists == '0'
         run: |
           cd flowintel
-          docker build -t ${PUSH_REGISTRY}/kam193/flowintel:${{ steps.read-commit.outputs.commit }} .
+          docker build -f ../Dockerfile.flowintel -t ${PUSH_REGISTRY}/kam193/flowintel:${{ steps.read-commit.outputs.commit }} .
           docker tag ${PUSH_REGISTRY}/kam193/flowintel:${{ steps.read-commit.outputs.commit }} ${PUSH_REGISTRY}/kam193/flowintel:latest
 
       - name: Push base image
