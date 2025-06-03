@@ -8,13 +8,62 @@ env:
   PUSH_REGISTRY: ghcr.io
   MANIFEST_REGISTRY: ghcr.io/
   BASE_TAG: "0.1."
+  BASE_IMAGE: "ghcr.io/kam193/flowintel"
 
 jobs:
+  build-base:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      commit: ${{ steps.read-commit.outputs.commit }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Authorize to GitHub Packages
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Read flowintel commit hash
+        id: read-commit
+        run: |
+          COMMIT=$(cat flowintel-commit | tr -d '\n')
+          echo "commit=$COMMIT" >> $GITHUB_OUTPUT
+
+      - name: Check if base image exists
+        id: check-base-image
+        run: |
+          export GHCR_TOKEN=$(echo ${{ secrets.GITHUB_TOKEN }} | base64)
+          echo "exists=$(curl -s -H "Authorization: Bearer ${GHCR_TOKEN}" https://ghcr.io/v2/kam193/flowintel/manifests/${{ steps.read-commit.outputs.commit }} | grep -v "manifest unknown" | wc -l)" >> $GITHUB_OUTPUT
+
+      - name: Clone flowintel repository
+        if: steps.check-base-image.outputs.exists == '0'
+        uses: actions/checkout@v4
+        with:
+          repository: flowintel/flowintel
+          ref: ${{ steps.read-commit.outputs.commit }}
+          path: flowintel
+
+      - name: Build base image
+        if: steps.check-base-image.outputs.exists == '0'
+        run: |
+          cd flowintel
+          docker build -t ${PUSH_REGISTRY}/kam193/flowintel:${{ steps.read-commit.outputs.commit }} .
+          docker tag ${PUSH_REGISTRY}/kam193/flowintel:${{ steps.read-commit.outputs.commit }} ${PUSH_REGISTRY}/kam193/flowintel:latest
+
+      - name: Push base image
+        if: steps.check-base-image.outputs.exists == '0'
+        run: |
+          docker push ${PUSH_REGISTRY}/kam193/flowintel:${{ steps.read-commit.outputs.commit }}
+          docker push ${PUSH_REGISTRY}/kam193/flowintel:latest
+
   build-containers:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+    needs: build-base
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,7 +75,7 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
       - name: Build container
         run: |
-          docker build -t ${PUSH_REGISTRY}/kam193/flowintel-fak:latest .
+          docker build --arg BASE_IMAGE=${BASE_IMAGE} -t ${PUSH_REGISTRY}/kam193/flowintel-fak:latest .
       - name: Check if the current version has already been pushed
         id: check-if-pushed
         run: |
