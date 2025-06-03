@@ -41,7 +41,7 @@ jobs:
         if: steps.check-base-image.outputs.exists == '0'
         uses: actions/checkout@v4
         with:
-          repository: https://github.com/flowintel/flowintel.git
+          repository: flowintel/flowintel
           ref: ${{ steps.read-commit.outputs.commit }}
           path: flowintel
 
